@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh" style="font-size: 11.4px;">
+<head>
+    <title></title>
+    <meta charset="UTF-8">
+    <link rel="icon" href="data:;base64,=">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, minimal-ui">
+    <meta name="format-detection" content="telephone=no"/>
+    <!--<link href="gc://resources/css/style.css" rel="stylesheet">-->
+    <!--<link href="gc://resources/css/video.css" rel="stylesheet">-->
+    <!--<link href="gc://resources/css/news.css" rel="stylesheet">-->
+    <link href="gc://resources/css/common.css" rel="stylesheet">
+</head>
+<body >
+    <div id="detail" class="inf_v_zhuc"></div>
+</body>
+<script type="text/javascript" src="gc://resources/js/resetimg.js"></script>
+<script type="text/javascript" src="gc://resources/js/jquery.js"></script>
+<script type="text/javascript" src="gc://resources/js/video.js"></script>
+<script type="text/javascript" src="gc://resources/js/lazyload.js"></script>
+<script type="text/javascript" src="gc://resources/js/common.js"></script>
+<script>
+    function checkRange() {
+        var width = window.innerWidth - 30;
+        var height = width * 9 / 16;
+        $(".ccc").each(function(k, v) {
+            $("#" + $(v).data("img")).css("width", width);
+            $("#" + $(v).data("img")).css("height", height);
+            $("#" + $(v).data("video")).css("width", width);
+            $("#" + $(v).data("video")).css("height", height)
+        });
+        $(".ccc").click(function() {
+            $(this).hide();
+            $("#" + $(this).data("img")).hide();
+            $("#" + $(this).data("video")).show();
+            $("#" + $(this).data("video") + "_html5_api").show();
+            $(".vjs-big-play-button").hide();
+            videojs($(this).data("video")).play()
+        })
+    };
+
+    /**
+     * 给图片新增点击查看大图方法
+     */
+    function clickImg() {
+        var img_list = document.getElementsByTagName('img');
+
+        for (var i = img_list.length - 1; i >= 0; i--) {
+            if (img_list[i].getAttribute('id') != 'cover_img') {
+                var parent_href = img_list[i].parentElement.getAttribute('src');
+                if (parent_href == undefined || parent_href == '' ) {
+                    var href = img_list[i].getAttribute('data-src');
+                    if (href == undefined || href == '') {
+                        img_list[i].addEventListener('click', function() {
+                            console.log(this.getAttribute('src'));
+                            imagelistener.openImage(this.getAttribute('src'));
+                        });
+                    } else {
+                        img_list[i].addEventListener('click', function() {
+                            console.log(this.getAttribute('data-src'));
+                            imagelistener.openImage(this.getAttribute('data-src'));
+                        })
+                    }
+                }
+            }
+        }
+    };
+
+    /**
+     * 获取所有图片URL
+     */
+    function getAllImg() {
+        var img_list = [];
+        var img = document.getElementsByTagName('img');
+
+        for (var i = 0; i < img.length; i++) {
+            if (img[i].id == 'cover_img') {
+                img_list.push(img[i].src);
+            } else {
+                img_list.push(img[i].getAttribute('data-src'))
+            }
+        }
+        return JSON.stringify(img_list);
+    }
+
+    /**
+     * 初始化基准宽度
+     */
+    function initWidth() {
+        var width = window.innerWidth / 30;
+        if (width < 12) {
+            width = 12
+        }
+        document.getElementsByTagName("html")[0].style.fontSize = width.toString() + "px"
+    };
+
+    /**
+     * 接收应用传回的数据并处理
+     * @param title
+     * @param contents
+     */
+    function returnData(title, content) {
+        // 对变量值进行替换
+        document.getElementById('detail').insertAdjacentHTML("afterbegin", content);
+
+        // 设置封面图片高度
+        document.getElementById('cover_img').style.height = (window.innerWidth * 0.50132509).toString() + 'px';
+
+        // 查找所有的ifram 并移除宽高指定
+        var iframe_list = document.getElementsByTagName('iframe');
+        for (var i = 0; i < iframe_list.length; i++) {
+            iframe_list[i].style.width = (window.innerWidth - 30).toString() + 'px';
+            iframe_list[i].style.height = ((window.innerWidth - 30) * 9 / 16).toString() + 'px'
+        }
+
+        // 视频
+        checkRange();
+
+        // 点击查看大图
+        clickImg();
+
+        // 懒加载 某些情况下会出现问题，所以推迟懒加载的执行时间。
+        setTimeout(function () {
+            $('.img_loadederror').lazyload({
+                threshold: 200,
+                data_attribute: 'src',
+                load: function() {
+                    $(this).removeClass("img_loadederror")
+                }
+            });
+        }, 100);
+
+        // 结束后调用安卓实现自动扩展webview高度
+        if (typeof fastConnect != 'undefined') {
+            fastConnect.contentfinish();
+        }
+    }
+
+    //初始化宽度
+    initWidth();
+
+    // 调用应用绑定方法
+    if (typeof fastConnect != 'undefined') {
+        fastConnect.requestData();
+    }
+</script>
